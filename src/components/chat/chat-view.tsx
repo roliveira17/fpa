@@ -16,8 +16,9 @@ export function ChatView() {
   const scroll_ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scroll_ref.current) {
-      scroll_ref.current.scrollTop = scroll_ref.current.scrollHeight;
+    const viewport = scroll_ref.current?.querySelector("[data-slot='scroll-area-viewport']");
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages]);
 
@@ -51,11 +52,11 @@ export function ChatView() {
   const is_empty = messages.length === 0;
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col min-h-0">
       {is_empty ? (
         <WelcomeState on_query={handleSend} />
       ) : (
-        <ScrollArea className="flex-1" ref={scroll_ref}>
+        <ScrollArea className="flex-1 min-h-0" ref={scroll_ref}>
           <div className="mx-auto max-w-3xl space-y-6 p-4 pb-4">
             {messages.map((msg) => (
               <ChatMessageBubble key={msg.id} message={msg} />
