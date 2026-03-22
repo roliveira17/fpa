@@ -59,8 +59,31 @@ CREATE TABLE knowledge_entries (
 );
 
 -- Dedup constraint: one entry per (diretoria, mes_ref, conta_pl, entry_type)
-CREATE UNIQUE INDEX uq_knowledge_entry
-    ON knowledge_entries (diretoria, mes_ref, coalesce(conta_pl, '__NULL__'), entry_type);
+-- Uses two partial indexes to handle NULL conta_pl safely
+CREATE UNIQUE INDEX uq_knowledge_entry_with_conta
+    ON knowledge_entries (diretoria, mes_ref, conta_pl, entry_type)
+    WHERE conta_pl IS NOT NULL;
+CREATE UNIQUE INDEX uq_knowledge_entry_no_conta
+    ON knowledge_entries (diretoria, mes_ref, entry_type)
+    WHERE conta_pl IS NULL;
+
+-- Validation constraints
+ALTER TABLE knowledge_entries ADD CONSTRAINT chk_mes_ref
+    CHECK (mes_ref ~ '^\d{4}-(0[1-9]|1[0-2])$');
+ALTER TABLE knowledge_entries ADD CONSTRAINT chk_variance_type
+    CHECK (variance_type IS NULL OR variance_type IN ('one-off', 'recurring', 'seasonal', 'reclassification'));
+ALTER TABLE knowledge_entries ADD CONSTRAINT chk_entry_type
+    CHECK (entry_type IN ('variance_explanation', 'context_gerencial', 'bp_note'));
+
+-- Auto-update updated_at on UPDATE
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN NEW.updated_at = now(); RETURN NEW; END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_knowledge_updated_at
+    BEFORE UPDATE ON knowledge_entries
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- Full-text search
 CREATE INDEX idx_knowledge_search ON knowledge_entries USING GIN (search_vector);
@@ -129,8 +152,8 @@ CREATE TABLE ingestion_log (
 
 ### Flow 2: Transcription / PDF Processing
 
-1. Analyst pastes transcript and/or uploads PDF
-2. `POST /api/context/process` (FormData)
+1. Analyst pastes transcript and/or uploads PDF (UI also sends analyst name from session)
+2. `POST /api/context/process` (FormData with `mes_ref`, `analyst`, and content)
 3. Backend:
    a. Extract text from PDF if present
    b. Save raw to S3 (backup/audit trail)
@@ -194,7 +217,9 @@ SQL generation pattern:
     AND ($4 IS NULL OR conta_pl = $4)
     AND ($5 IS NULL OR entry_type = $5)
     AND ($6 IS NULL OR search_vector @@ plainto_tsquery('portuguese', $6))
-  ORDER BY mes_ref DESC, diretoria
+  ORDER BY
+    CASE WHEN $6 IS NOT NULL THEN ts_rank(search_vector, plainto_tsquery('portuguese', $6)) END DESC NULLS LAST,
+    mes_ref DESC, diretoria
   LIMIT $7
 ```
 
@@ -207,7 +232,18 @@ Input:
 Output:
   - tables: CatalogEntry[]
 
-Retrieval: ILIKE on description, use_cases array elements, and column descriptions.
+SQL generation pattern:
+  SELECT * FROM data_catalog
+  WHERE is_active = true
+    AND (
+      description ILIKE '%' || $1 || '%'
+      OR EXISTS (SELECT 1 FROM unnest(use_cases) uc WHERE uc ILIKE '%' || $1 || '%')
+      OR EXISTS (SELECT 1 FROM jsonb_array_elements(columns) col WHERE col->>'description' ILIKE '%' || $1 || '%')
+    )
+  ORDER BY table_name
+
+Note: The agent may need to extract keywords from the intent before querying.
+      The backend should split multi-word intents into individual ILIKE terms with AND.
 Future: add pgvector embedding column for semantic search if ILIKE proves insufficient.
 ```
 
@@ -246,6 +282,7 @@ POST /api/knowledge/save
     diretoria: string,
     mes_ref: string,
     analyst: string,
+    entry_type: 'variance_explanation' | 'bp_note',   -- wizard always sends this
     entries: [{
       conta_pl: string | null,
       explanation: string,
@@ -259,6 +296,12 @@ POST /api/knowledge/save
     skipped: number,
     conflicts: [{ entry_id: string, existing_text: string, new_text: string, reason: string }]
   }
+  Notes:
+    - Backend infers source='wizard' for this endpoint
+    - entry_type applies to all entries in the array
+    - When conflicts are returned, created/merged/skipped reflect only non-conflicting entries
+    - Frontend should show partial counters immediately, then show conflict modal
+    - After all conflicts are resolved, frontend refreshes counters via GET or local update
 
 POST /api/knowledge/resolve-conflict
   Body: {
@@ -267,6 +310,10 @@ POST /api/knowledge/resolve-conflict
     custom_text?: string
   }
   Response: { ok: true }
+  Notes:
+    - 'keep_existing': no change to entry, appends to merge_history with action='conflict_kept_existing'
+    - 'use_new': overwrites explanation, updates sources/merged_at, appends merge_history
+    - 'custom': sets explanation to custom_text, same metadata updates as 'use_new'
 ```
 
 ### Knowledge Retrieval
@@ -289,7 +336,7 @@ POST /api/knowledge/search
 
 ```
 POST /api/context/process
-  Body: FormData { mes_ref: string, transcript?: string, pdf?: File }
+  Body: FormData { mes_ref: string, analyst: string, transcript?: string, pdf?: File }
   Response: {
     fragments_total: number,
     created: number,
@@ -371,6 +418,8 @@ INSERT INTO data_catalog (table_name, description, granularity, columns, use_cas
 ### Types added (`src/lib/types.ts`)
 
 ```typescript
+// Note: merge_history and merged_at exist in DB but are not returned by the search API.
+// They are internal fields for audit trail only.
 interface KnowledgeEntry {
   id: string;
   diretoria: string;
