@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useKnowledgeStore } from "@/lib/store";
 import { BP_MAPPING } from "@/lib/constants";
+import { YamlEditor } from "./yaml-editor";
 
 interface StepPreviewProps {
   on_next: () => void;
@@ -100,12 +101,7 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
                 {squad}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-1">
-                <textarea
-                  value={yaml_text}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="w-full h-[200px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                  spellCheck={false}
-                />
+                <YamlEditor value={yaml_text} on_change={handleChange} height="200px" />
               </CollapsibleContent>
             </Collapsible>
           ))}
@@ -120,12 +116,7 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
         <>
           <div>
             <p className="text-sm font-medium mb-2">Preview do YAML</p>
-            <textarea
-              value={yaml_text}
-              onChange={(e) => handleChange(e.target.value)}
-              className="w-full h-[400px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-              spellCheck={false}
-            />
+            <YamlEditor value={yaml_text} on_change={handleChange} height="400px" />
           </div>
 
           {errors.length > 0 && (
