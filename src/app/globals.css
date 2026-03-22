@@ -45,6 +45,7 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-cora-pink: var(--cora-pink);
   --color-cora-dark: var(--cora-dark);
+  --color-budget: var(--budget);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -54,7 +55,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Cora Dark Theme (default) */
+/* Cora Dark Theme (default)
+   Note: White on cora-pink (#E91E63) = 3.6:1 contrast ratio (below WCAG AA 4.5:1).
+   This is a documented brand exception — #E91E63 is the Cora brand color. */
 :root {
   --cora-pink: #E91E63;
   --cora-dark: #1A1A2E;
@@ -83,7 +86,8 @@
   --ring: #E91E63;
 
   --chart-1: #E91E63;
-  --chart-2: #9090A8;
+  --chart-2: #9E9E9E;
+  --budget: #9E9E9E;
   --chart-3: #4CAF50;
   --chart-4: #FF9800;
   --chart-5: #2196F3;
@@ -118,20 +122,21 @@
   --muted-foreground: #65657A;
   --accent: #E8E8EF;
   --accent-foreground: #1A1A2E;
-  --destructive: #E53935;
-  --success: #2E7D32;
+  --destructive: #F44336;
+  --success: #4CAF50;
   --success-foreground: #FFFFFF;
-  --warning: #E65100;
-  --warning-foreground: #FFFFFF;
+  --warning: #FF9800;
+  --warning-foreground: #000000;
   --border: rgba(0, 0, 0, 0.10);
   --input: rgba(0, 0, 0, 0.08);
   --ring: #E91E63;
 
   --chart-1: #E91E63;
-  --chart-2: #65657A;
-  --chart-3: #2E7D32;
-  --chart-4: #E65100;
-  --chart-5: #1565C0;
+  --chart-2: #9E9E9E;
+  --budget: #9E9E9E;
+  --chart-3: #4CAF50;
+  --chart-4: #FF9800;
+  --chart-5: #2196F3;
 
   --sidebar: #F0F0F5;
   --sidebar-foreground: #1A1A2E;

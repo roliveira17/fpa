@@ -12,11 +12,11 @@ function rowClasses(type: DreRow["type"]): string {
     case "header":
       return "bg-cora-dark text-white font-semibold";
     case "subtotal":
-      return "bg-secondary/40 font-semibold";
+      return "bg-muted font-semibold";
     case "total":
-      return "bg-secondary/60 font-bold";
+      return "bg-muted font-bold";
     case "pct":
-      return "bg-secondary/10 italic text-muted-foreground";
+      return "bg-accent italic text-muted-foreground";
     default:
       return "";
   }
