@@ -110,11 +110,13 @@ export function SidebarLeft({ onReportClick }: SidebarLeftProps) {
         {content}
       </aside>
       {/* Mobile/Tablet */}
-      <Sheet open={left_panel_open} onOpenChange={setLeftPanel}>
-        <SheetContent side="left" className="w-56 p-0 bg-sidebar border-border">
-          {content}
-        </SheetContent>
-      </Sheet>
+      {left_panel_open && (
+        <Sheet open={left_panel_open} onOpenChange={setLeftPanel}>
+          <SheetContent side="left" className="w-56 p-0 bg-sidebar border-border">
+            {content}
+          </SheetContent>
+        </Sheet>
+      )}
     </>
   );
 }
