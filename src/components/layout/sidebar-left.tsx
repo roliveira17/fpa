@@ -8,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { REPORTS } from "@/lib/constants";
 import { useChatStore, useAppStore } from "@/lib/store";
 import { useState } from "react";
@@ -18,7 +19,7 @@ interface SidebarLeftProps {
 
 export function SidebarLeft({ onReportClick }: SidebarLeftProps) {
   const { clearMessages } = useChatStore();
-  const { setActiveTab } = useAppStore();
+  const { setActiveTab, left_panel_open, setLeftPanel } = useAppStore();
   const [about_open, setAboutOpen] = useState(false);
 
   function handleReportClick(report_id: string) {
@@ -26,8 +27,8 @@ export function SidebarLeft({ onReportClick }: SidebarLeftProps) {
     onReportClick(report_id);
   }
 
-  return (
-    <aside className="flex w-56 flex-col border-r border-border bg-sidebar">
+  const content = (
+    <>
       <div className="flex-1 overflow-y-auto p-3">
         <p className="mb-2 px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Relatórios
@@ -99,6 +100,21 @@ export function SidebarLeft({ onReportClick }: SidebarLeftProps) {
           Limpar Conversa
         </Button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop */}
+      <aside className="hidden lg:flex w-56 flex-col border-r border-border bg-sidebar">
+        {content}
+      </aside>
+      {/* Mobile/Tablet */}
+      <Sheet open={left_panel_open} onOpenChange={setLeftPanel}>
+        <SheetContent side="left" className="w-56 p-0 bg-sidebar border-border">
+          {content}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

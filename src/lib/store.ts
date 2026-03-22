@@ -30,7 +30,9 @@ interface KnowledgeStore {
   explanations: Record<string, KnowledgeExplanation>;
   bp_notes: string;
   yaml_text: string;
-  saved_path: string | null;
+  saved_path: string | string[] | null;
+  group_squads: string[];
+  active_squad: string;
   setStep: (n: number) => void;
   setAnalystName: (v: string) => void;
   setDiretoria: (v: string) => void;
@@ -39,7 +41,9 @@ interface KnowledgeStore {
   setExplanation: (conta: string, exp: KnowledgeExplanation) => void;
   setBpNotes: (v: string) => void;
   setYamlText: (v: string) => void;
-  setSavedPath: (v: string | null) => void;
+  setSavedPath: (v: string | string[] | null) => void;
+  setGroupSquads: (squads: string[]) => void;
+  setActiveSquad: (squad: string) => void;
   reset: () => void;
 }
 
@@ -53,6 +57,8 @@ const KNOWLEDGE_INITIAL = {
   bp_notes: "",
   yaml_text: "",
   saved_path: null,
+  group_squads: [],
+  active_squad: "",
 };
 
 export const useKnowledgeStore = create<KnowledgeStore>((set) => ({
@@ -67,6 +73,8 @@ export const useKnowledgeStore = create<KnowledgeStore>((set) => ({
   setBpNotes: (v) => set({ bp_notes: v }),
   setYamlText: (v) => set({ yaml_text: v }),
   setSavedPath: (v) => set({ saved_path: v }),
+  setGroupSquads: (squads) => set({ group_squads: squads, active_squad: squads[0] ?? "" }),
+  setActiveSquad: (squad) => set({ active_squad: squad }),
   reset: () => set(KNOWLEDGE_INITIAL),
 }));
 
@@ -75,15 +83,21 @@ type ActiveTab = "chat" | "knowledge" | "context";
 interface AppStore {
   active_tab: ActiveTab;
   right_panel_open: boolean;
+  left_panel_open: boolean;
   setActiveTab: (t: ActiveTab) => void;
   toggleRightPanel: () => void;
+  toggleLeftPanel: () => void;
+  setLeftPanel: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppStore>((set) => ({
   active_tab: "chat",
   right_panel_open: true,
+  left_panel_open: false,
   setActiveTab: (t) => set({ active_tab: t }),
   toggleRightPanel: () => set((s) => ({ right_panel_open: !s.right_panel_open })),
+  toggleLeftPanel: () => set((s) => ({ left_panel_open: !s.left_panel_open })),
+  setLeftPanel: (v) => set({ left_panel_open: v }),
 }));
 
 interface SettingsStore extends SettingsState {

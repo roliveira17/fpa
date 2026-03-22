@@ -6,12 +6,20 @@ import { useAppStore, useSettingsStore } from "@/lib/store";
 import { SettingsPanel } from "./settings-panel";
 
 export function Header() {
-  const { toggleRightPanel } = useAppStore();
+  const { toggleRightPanel, toggleLeftPanel } = useAppStore();
   const { setOpen: openSettings } = useSettingsStore();
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4">
       <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="lg:hidden h-8 w-8 p-0"
+          onClick={toggleLeftPanel}
+        >
+          <span className="text-sm">☰</span>
+        </Button>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
           C
         </div>
