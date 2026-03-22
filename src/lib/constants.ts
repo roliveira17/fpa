@@ -169,7 +169,7 @@ export const COLORS = {
   danger: "#F44336",
   warning: "#FF9800",
   actual: "#E91E63",
-  budget: "#9090A8",
+  budget: "#65657A",
   yoy: "#1A1A2E",
   waterfall: {
     increase: "#4CAF50",

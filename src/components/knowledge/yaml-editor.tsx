@@ -63,7 +63,7 @@ export function YamlEditor({ value, on_change, height = "400px" }: YamlEditorPro
     <div className="relative rounded-md border border-border overflow-hidden" style={{ height }}>
       <div
         ref={lines_ref}
-        className="absolute left-0 top-0 bottom-0 w-10 bg-[#0A0A15] border-r border-border/50 overflow-hidden select-none"
+        className="absolute left-0 top-0 bottom-0 w-10 bg-secondary border-r border-border/50 overflow-hidden select-none"
       >
         <div className="py-3 px-1">
           {lines.map((_, i) => (
@@ -84,7 +84,7 @@ export function YamlEditor({ value, on_change, height = "400px" }: YamlEditorPro
         value={value}
         onChange={(e) => on_change(e.target.value)}
         onScroll={handleScroll}
-        className="absolute left-10 top-0 right-0 bottom-0 p-3 font-mono text-xs leading-[1.65] bg-[#0D0D18] text-transparent caret-green-400 resize-none focus:outline-none selection:bg-primary/30"
+        className="absolute left-10 top-0 right-0 bottom-0 p-3 font-mono text-xs leading-[1.65] bg-card text-transparent caret-primary resize-none focus:outline-none selection:bg-primary/30"
         spellCheck={false}
       />
     </div>

@@ -49,9 +49,9 @@ export function ChartRenderer({ data, config }: ChartRendererProps) {
       <div className="my-3 h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis dataKey={config.x} tick={{ fontSize: 11, fill: "#9090A8" }} />
-            <YAxis tick={{ fontSize: 11, fill: "#9090A8" }} tickFormatter={(v) => formatBrlCompact(v)} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey={config.x} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+            <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickFormatter={(v) => formatBrlCompact(v)} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             {y_keys.map((key, i) => (
@@ -76,9 +76,9 @@ export function ChartRenderer({ data, config }: ChartRendererProps) {
       <div className="my-3 h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 5, right: 20, bottom: 5, left: 80 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-            <XAxis type="number" tick={{ fontSize: 11, fill: "#9090A8" }} tickFormatter={(v) => formatBrlCompact(v)} />
-            <YAxis type="category" dataKey={config.y as string} tick={{ fontSize: 11, fill: "#9090A8" }} width={75} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickFormatter={(v) => formatBrlCompact(v)} />
+            <YAxis type="category" dataKey={config.y as string} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={75} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey={config.x} radius={[0, 4, 4, 0]}>
               {data.map((entry, i) => (
@@ -99,9 +99,9 @@ export function ChartRenderer({ data, config }: ChartRendererProps) {
     <div className="my-3 h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey={config.x} tick={{ fontSize: 10, fill: "#9090A8" }} angle={-20} textAnchor="end" height={50} />
-          <YAxis tick={{ fontSize: 11, fill: "#9090A8" }} tickFormatter={(v) => formatBrlCompact(v)} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey={config.x} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} angle={-20} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickFormatter={(v) => formatBrlCompact(v)} />
           <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ fontSize: 11 }} />
           {y_keys.map((key, i) => (
@@ -146,9 +146,9 @@ function WaterfallChart({ data, x_key }: { data: Record<string, unknown>[]; x_ke
     <div className="my-3 h-72">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={waterfall_data} margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey="name" tick={{ fontSize: 9, fill: "#9090A8" }} angle={-30} textAnchor="end" height={60} />
-          <YAxis tick={{ fontSize: 11, fill: "#9090A8" }} tickFormatter={(v) => formatBrlCompact(v)} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="name" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} angle={-30} textAnchor="end" height={60} />
+          <YAxis tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickFormatter={(v) => formatBrlCompact(v)} />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="base" stackId="stack" fill="transparent" />
           <Bar dataKey="value" stackId="stack" radius={[3, 3, 0, 0]}>
