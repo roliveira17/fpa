@@ -15,6 +15,7 @@ import { getMockDiagnosticData, getMockPreviousMonthKnowledge } from "@/lib/mock
 import { formatBrl, formatBrlCompact, formatPct, trendArrow, budgetStatus } from "@/lib/formatters";
 import { DiagnosticData, KnowledgeExplanation, PreviousMonthKnowledge } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface StepDiagnosticProps {
   on_next: () => void;
@@ -22,9 +23,11 @@ interface StepDiagnosticProps {
 }
 
 export function StepDiagnostic({ on_next, on_back }: StepDiagnosticProps) {
-  const { diretoria, mes_ref, show_all, explanations, bp_notes, setExplanation, setBpNotes } = useKnowledgeStore();
-  const data = getMockDiagnosticData(diretoria);
-  const prev_knowledge = getMockPreviousMonthKnowledge(diretoria);
+  const { diretoria, mes_ref, show_all, explanations, bp_notes, setExplanation, setBpNotes, group_squads, active_squad, setActiveSquad } = useKnowledgeStore();
+  const is_group = group_squads.length > 0;
+  const effective_diretoria = is_group ? active_squad : diretoria;
+  const data = getMockDiagnosticData(effective_diretoria);
+  const prev_knowledge = getMockPreviousMonthKnowledge(effective_diretoria);
 
   const filtered = show_all
     ? data.variances
@@ -34,6 +37,18 @@ export function StepDiagnostic({ on_next, on_back }: StepDiagnosticProps) {
 
   return (
     <div className="space-y-4 p-4">
+      {is_group && (
+        <Tabs value={active_squad} onValueChange={setActiveSquad}>
+          <TabsList className="h-8 bg-secondary/30">
+            {group_squads.map((squad) => (
+              <TabsTrigger key={squad} value={squad} className="text-xs h-6 px-3">
+                {squad}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      )}
+
       {/* Metric cards */}
       <div className="grid grid-cols-3 gap-3">
         <MetricCard

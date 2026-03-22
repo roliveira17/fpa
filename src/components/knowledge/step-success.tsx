@@ -5,7 +5,8 @@ import { useKnowledgeStore, useChatStore, useAppStore } from "@/lib/store";
 import { getMockChatResponse } from "@/lib/mock/financial-data";
 
 export function StepSuccess() {
-  const { diretoria, mes_ref, saved_path, reset } = useKnowledgeStore();
+  const { diretoria, mes_ref, saved_path, reset, group_squads } = useKnowledgeStore();
+  const is_group = group_squads.length > 0;
   const { addMessage, setLoading } = useChatStore();
   const { setActiveTab } = useAppStore();
 
@@ -45,26 +46,45 @@ export function StepSuccess() {
 
       {saved_path && (
         <div className="rounded-md bg-secondary/30 p-3">
-          <p className="text-[11px] text-muted-foreground">Arquivo salvo em:</p>
-          <p className="font-mono text-xs text-foreground mt-0.5">
-            {saved_path}
+          <p className="text-[11px] text-muted-foreground">
+            {Array.isArray(saved_path) ? "Arquivos salvos em:" : "Arquivo salvo em:"}
           </p>
+          {(Array.isArray(saved_path) ? saved_path : [saved_path]).map((p) => (
+            <p key={p} className="font-mono text-xs text-foreground mt-0.5">{p}</p>
+          ))}
         </div>
       )}
 
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">Sugestões de follow-up:</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs"
-          onClick={() =>
-            handleFollowUp(`Analise ${diretoria} ${mes_ref}`)
-          }
-        >
-          Analise {diretoria} {mes_ref}
-        </Button>
-      </div>
+      {is_group ? (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Sugestões por squad:</p>
+          <div className="flex flex-wrap gap-2">
+            {group_squads.map((squad) => (
+              <Button
+                key={squad}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => handleFollowUp(`Analise ${squad} ${mes_ref}`)}
+              >
+                Analise {squad} {mes_ref}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Sugestões de follow-up:</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => handleFollowUp(`Analise ${diretoria} ${mes_ref}`)}
+          >
+            Analise {diretoria} {mes_ref}
+          </Button>
+        </div>
+      )}
 
       <Button
         onClick={reset}

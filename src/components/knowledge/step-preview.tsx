@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useKnowledgeStore } from "@/lib/store";
 import { BP_MAPPING } from "@/lib/constants";
 
@@ -56,6 +57,8 @@ function validateYaml(text: string): string[] {
 
 export function StepPreview({ on_next, on_back }: StepPreviewProps) {
   const store = useKnowledgeStore();
+  const { group_squads } = store;
+  const is_group = group_squads.length > 0;
   const [yaml_text, setYamlText] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -79,45 +82,81 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
     on_next();
   }
 
+  function handleSaveAll() {
+    const paths = group_squads.map(
+      (squad) => `knowledge/variances/${squad.toLowerCase()}/${store.mes_ref}.yaml`
+    );
+    store.setSavedPath(paths);
+    on_next();
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-6">
-      <div>
-        <p className="text-sm font-medium mb-2">Preview do YAML</p>
-        <textarea
-          value={yaml_text}
-          onChange={(e) => handleChange(e.target.value)}
-          className="w-full h-[400px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-          spellCheck={false}
-        />
-      </div>
-
-      {errors.length > 0 && (
-        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
-          <p className="text-xs font-medium text-destructive mb-1">
-            Erros de validação:
-          </p>
-          <ul className="space-y-0.5">
-            {errors.map((err, i) => (
-              <li key={i} className="text-xs text-destructive/80">
-                • {err}
-              </li>
-            ))}
-          </ul>
+      {is_group ? (
+        <div className="space-y-3">
+          {group_squads.map((squad) => (
+            <Collapsible key={squad} defaultOpen>
+              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-accent/20">
+                {squad}
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-1">
+                <textarea
+                  value={yaml_text}
+                  onChange={(e) => handleChange(e.target.value)}
+                  className="w-full h-[200px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                  spellCheck={false}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={on_back}>Voltar</Button>
+            <Button onClick={handleSaveAll} disabled={errors.length > 0} className="bg-primary hover:bg-primary/90">
+              Salvar Todos
+            </Button>
+          </div>
         </div>
-      )}
+      ) : (
+        <>
+          <div>
+            <p className="text-sm font-medium mb-2">Preview do YAML</p>
+            <textarea
+              value={yaml_text}
+              onChange={(e) => handleChange(e.target.value)}
+              className="w-full h-[400px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+              spellCheck={false}
+            />
+          </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={on_back}>
-          Voltar
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={errors.length > 0}
-          className="bg-primary hover:bg-primary/90"
-        >
-          Salvar
-        </Button>
-      </div>
+          {errors.length > 0 && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+              <p className="text-xs font-medium text-destructive mb-1">
+                Erros de validação:
+              </p>
+              <ul className="space-y-0.5">
+                {errors.map((err, i) => (
+                  <li key={i} className="text-xs text-destructive/80">
+                    • {err}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={on_back}>
+              Voltar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={errors.length > 0}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Salvar
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

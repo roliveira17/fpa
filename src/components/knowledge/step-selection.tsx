@@ -21,7 +21,7 @@ interface StepSelectionProps {
 export function StepSelection({ on_next }: StepSelectionProps) {
   const {
     analyst_name, diretoria, mes_ref, show_all,
-    setAnalystName, setDiretoria, setMesRef, setShowAll,
+    setAnalystName, setDiretoria, setMesRef, setShowAll, setGroupSquads,
   } = useKnowledgeStore();
 
   const is_group = Object.keys(DIRETORIA_GROUPS).some((g) =>
@@ -32,6 +32,18 @@ export function StepSelection({ on_next }: StepSelectionProps) {
   )?.[0];
 
   const can_proceed = analyst_name.trim() && diretoria && mes_ref;
+
+  function handleNext() {
+    const group = Object.entries(DIRETORIA_GROUPS).find(([, dirs]) =>
+      dirs.includes(diretoria)
+    );
+    if (group) {
+      setGroupSquads(group[1]);
+    } else {
+      setGroupSquads([]);
+    }
+    on_next();
+  }
 
   return (
     <div className="mx-auto max-w-lg space-y-5 p-6">
@@ -95,7 +107,7 @@ export function StepSelection({ on_next }: StepSelectionProps) {
       </div>
 
       <Button
-        onClick={on_next}
+        onClick={handleNext}
         disabled={!can_proceed}
         className="w-full bg-primary hover:bg-primary/90"
       >
