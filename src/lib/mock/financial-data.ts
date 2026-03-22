@@ -1,4 +1,4 @@
-import { AgentResponse, DreRow, Variance, DiagnosticData, SupplierBreakdown, BuBreakdown, PreviousMonthKnowledge } from "../types";
+import { AgentResponse, ContextProcessResult, DreRow, IngestionResult, Variance, DiagnosticData, SupplierBreakdown, BuBreakdown, PreviousMonthKnowledge } from "../types";
 
 export const MOCK_DRE_ROWS: DreRow[] = [
   { label: "Receita Bruta", type: "header", indent: 0, actual: 425_800_000, budget: 410_000_000, delta: 15_800_000, variance_pct: 0.0385 },
@@ -194,12 +194,68 @@ export function getMockPreviousMonthKnowledge(diretoria: string): Record<string,
   };
 }
 
-export function getMockContextCheck(mes_ref: string): { exists: boolean; content?: string } {
+export function getMockContextCheck(mes_ref: string): { exists: boolean; entry_count?: number; content?: string } {
   if (mes_ref === "2025-01") {
-    return {
-      exists: true,
-      content: "## Resumo Executivo — Janeiro 2025\n\n| KPI | Valor | vs Budget |\n|-----|-------|----------|\n| Receita Líquida | R$ 366,6M | +4,0% |\n| EBITDA | R$ 36,3M | +1,1% |\n| Margem EBITDA | 9,9% | -0,3pp |\n| Lucro Líquido | R$ 15,5M | -2,6% |\n\n### Narrativa do Mês\nJaneiro apresentou forte crescimento top-line...",
-    };
+    return { exists: true, entry_count: 12, content: "Resumo executivo placeholder" };
   }
   return { exists: false };
+}
+
+interface SaveKnowledgeInput {
+  diretoria: string;
+  mes_ref: string;
+  analyst: string;
+  entry_type: 'variance_explanation' | 'bp_note';
+  entries: {
+    conta_pl: string | null;
+    explanation: string;
+    variance_type: 'one-off' | 'recurring' | 'seasonal' | 'reclassification';
+    expect_next: boolean;
+  }[];
+}
+
+export async function mockSaveKnowledge(input: SaveKnowledgeInput): Promise<IngestionResult> {
+  await new Promise((r) => setTimeout(r, 800));
+  const total = input.entries.length;
+  const has_conflict = total >= 3;
+  if (has_conflict) {
+    const conflict_entry = input.entries[total - 1];
+    return {
+      created: total - 2,
+      merged: 1,
+      skipped: 0,
+      conflicts: [{
+        entry_id: crypto.randomUUID(),
+        existing_text: `Explicação anterior para ${conflict_entry.conta_pl}: tendência de estabilização prevista para março.`,
+        new_text: conflict_entry.explanation,
+        reason: "Contradição detectada: a explicação anterior indica estabilização, mas a nova indica continuidade.",
+      }],
+    };
+  }
+  const created = Math.max(1, total - 1);
+  const merged = total - created;
+  return { created, merged, skipped: 0, conflicts: [] };
+}
+
+interface ProcessContextInput {
+  mes_ref: string;
+  analyst: string;
+  transcript?: string;
+  pdf?: File;
+}
+
+export async function mockProcessContext(input: ProcessContextInput): Promise<ContextProcessResult> {
+  await new Promise((r) => setTimeout(r, 2000));
+  return { fragments_total: 7, created: 4, merged: 2, skipped: 1, conflicts: [] };
+}
+
+interface ResolveConflictInput {
+  entry_id: string;
+  resolution: 'keep_existing' | 'use_new' | 'custom';
+  custom_text?: string;
+}
+
+export async function mockResolveConflict(input: ResolveConflictInput): Promise<{ ok: true }> {
+  await new Promise((r) => setTimeout(r, 400));
+  return { ok: true };
 }
