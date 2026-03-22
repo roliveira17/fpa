@@ -2,10 +2,12 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, useSettingsStore } from "@/lib/store";
+import { SettingsPanel } from "./settings-panel";
 
 export function Header() {
   const { toggleRightPanel } = useAppStore();
+  const { setOpen: openSettings } = useSettingsStore();
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4">
@@ -23,6 +25,14 @@ export function Header() {
           variant="ghost"
           size="sm"
           className="text-xs text-muted-foreground"
+          onClick={() => openSettings(true)}
+        >
+          Settings
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs text-muted-foreground"
           onClick={toggleRightPanel}
         >
           Roadmap
@@ -33,6 +43,7 @@ export function Header() {
           </AvatarFallback>
         </Avatar>
       </div>
+      <SettingsPanel />
     </header>
   );
 }
