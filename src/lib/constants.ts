@@ -1,4 +1,4 @@
-import { Report, AgentRoadmap } from "./types";
+import { Report, AgentRoadmap, LoadingStep } from "./types";
 
 export const BP_MAPPING: Record<string, string> = {
   PRODUTO: "Ana Silva",
@@ -153,6 +153,13 @@ export const AVAILABLE_MONTHS = [
   "2024-09",
   "2024-08",
   "2024-07",
+];
+
+export const LOADING_STEPS: { id: LoadingStep; label: string }[] = [
+  { id: "generating_sql", label: "Gerando SQL..." },
+  { id: "executing_query", label: "Executando query..." },
+  { id: "analyzing", label: "Analisando resultados..." },
+  { id: "rendering", label: "Renderizando resposta..." },
 ];
 
 export const COLORS = {

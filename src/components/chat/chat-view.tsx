@@ -7,11 +7,12 @@ import { useChatStore } from "@/lib/store";
 import { getMockChatResponse } from "@/lib/mock/financial-data";
 import { ChatMessageBubble } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { LoadingSteps } from "./loading-steps";
 import { SUGGESTION_QUERIES } from "@/lib/constants";
 import { ChatMessage } from "@/lib/types";
 
 export function ChatView() {
-  const { messages, is_loading, addMessage, setLoading } = useChatStore();
+  const { messages, is_loading, loading_step, addMessage, setLoading, setLoadingStep } = useChatStore();
   const scroll_ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,8 +30,10 @@ export function ChatView() {
     };
     addMessage(user_msg);
     setLoading(true);
-
-    // Simulate API delay
+    setLoadingStep("generating_sql");
+    setTimeout(() => setLoadingStep("executing_query"), 400);
+    setTimeout(() => setLoadingStep("analyzing"), 900);
+    setTimeout(() => setLoadingStep("rendering"), 1300);
     setTimeout(() => {
       const response = getMockChatResponse(text);
       const assistant_msg: ChatMessage = {
@@ -42,8 +45,8 @@ export function ChatView() {
       };
       addMessage(assistant_msg);
       setLoading(false);
-    }, 1200);
-  }, [addMessage, setLoading]);
+    }, 1700);
+  }, [addMessage, setLoading, setLoadingStep]);
 
   const is_empty = messages.length === 0;
 
@@ -57,19 +60,7 @@ export function ChatView() {
             {messages.map((msg) => (
               <ChatMessageBubble key={msg.id} message={msg} />
             ))}
-            {is_loading && (
-              <div className="flex gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                  C
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <span className="animate-pulse">Analisando</span>
-                  <span className="animate-bounce delay-100">.</span>
-                  <span className="animate-bounce delay-200">.</span>
-                  <span className="animate-bounce delay-300">.</span>
-                </div>
-              </div>
-            )}
+            {is_loading && <LoadingSteps current_step={loading_step} />}
           </div>
         </ScrollArea>
       )}

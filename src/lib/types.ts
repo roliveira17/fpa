@@ -96,3 +96,19 @@ export interface DreRow {
   delta: number | null;
   variance_pct: number | null;
 }
+
+export type LoadingStep = "generating_sql" | "executing_query" | "analyzing" | "rendering";
+
+export interface PreviousMonthKnowledge {
+  conta_pl: string;
+  explanation: string;
+  type: KnowledgeExplanation["type"];
+  mes_ref: string;
+}
+
+export interface SettingsState {
+  llm_model: string;
+  data_source: string;
+  language: "pt-BR" | "en";
+  theme: "dark" | "light";
+}

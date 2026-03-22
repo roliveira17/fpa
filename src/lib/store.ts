@@ -1,19 +1,23 @@
 import { create } from "zustand";
-import { ChatMessage, KnowledgeExplanation } from "./types";
+import { ChatMessage, KnowledgeExplanation, LoadingStep, SettingsState } from "./types";
 
 interface ChatStore {
   messages: ChatMessage[];
   is_loading: boolean;
+  loading_step: LoadingStep | null;
   addMessage: (msg: ChatMessage) => void;
   setLoading: (v: boolean) => void;
+  setLoadingStep: (step: LoadingStep | null) => void;
   clearMessages: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
   is_loading: false,
+  loading_step: null,
   addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
-  setLoading: (v) => set({ is_loading: v }),
+  setLoading: (v) => set({ is_loading: v, ...(v ? {} : { loading_step: null }) }),
+  setLoadingStep: (step) => set({ loading_step: step }),
   clearMessages: () => set({ messages: [] }),
 }));
 
@@ -80,4 +84,20 @@ export const useAppStore = create<AppStore>((set) => ({
   right_panel_open: true,
   setActiveTab: (t) => set({ active_tab: t }),
   toggleRightPanel: () => set((s) => ({ right_panel_open: !s.right_panel_open })),
+}));
+
+interface SettingsStore extends SettingsState {
+  is_open: boolean;
+  setOpen: (v: boolean) => void;
+  updateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
+}
+
+export const useSettingsStore = create<SettingsStore>((set) => ({
+  llm_model: "claude-sonnet-4.6",
+  data_source: "financial_planning.fpa_combined",
+  language: "pt-BR",
+  theme: "dark",
+  is_open: false,
+  setOpen: (v) => set({ is_open: v }),
+  updateSetting: (key, value) => set({ [key]: value }),
 }));

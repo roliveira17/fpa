@@ -23,7 +23,7 @@ const REPORT_PROMPTS: Record<string, string> = {
 
 export default function Home() {
   const { active_tab, setActiveTab } = useAppStore();
-  const { addMessage, setLoading } = useChatStore();
+  const { addMessage, setLoading, setLoadingStep } = useChatStore();
 
   const handleReportClick = useCallback((report_id: string) => {
     const prompt = REPORT_PROMPTS[report_id] ?? `Gere o relatório ${report_id}`;
@@ -36,7 +36,10 @@ export default function Home() {
     };
     addMessage(user_msg);
     setLoading(true);
-
+    setLoadingStep("generating_sql");
+    setTimeout(() => setLoadingStep("executing_query"), 400);
+    setTimeout(() => setLoadingStep("analyzing"), 900);
+    setTimeout(() => setLoadingStep("rendering"), 1300);
     setTimeout(() => {
       const response = getMockChatResponse(prompt);
       const assistant_msg: ChatMessage = {
@@ -48,8 +51,8 @@ export default function Home() {
       };
       addMessage(assistant_msg);
       setLoading(false);
-    }, 1500);
-  }, [addMessage, setLoading]);
+    }, 1700);
+  }, [addMessage, setLoading, setLoadingStep]);
 
   return (
     <div className="flex h-full flex-col">
