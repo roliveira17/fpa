@@ -1,4 +1,4 @@
-import { AgentResponse, DreRow, Variance, DiagnosticData, SupplierBreakdown, BuBreakdown } from "../types";
+import { AgentResponse, DreRow, Variance, DiagnosticData, SupplierBreakdown, BuBreakdown, PreviousMonthKnowledge } from "../types";
 
 export const MOCK_DRE_ROWS: DreRow[] = [
   { label: "Receita Bruta", type: "header", indent: 0, actual: 425_800_000, budget: 410_000_000, delta: 15_800_000, variance_pct: 0.0385 },
@@ -174,6 +174,23 @@ export function getMockDiagnosticData(diretoria: string): DiagnosticData {
       "O estouro em Treinamento está ligado a algum programa específico?",
       "A economia em Viagens é sustentável ou há demanda reprimida?",
     ],
+  };
+}
+
+export function getMockPreviousMonthKnowledge(diretoria: string): Record<string, PreviousMonthKnowledge> {
+  return {
+    "Despesas com Pessoal": {
+      conta_pl: "Despesas com Pessoal",
+      explanation: "Aumento de 12 novas posições em Engenharia aprovadas no board de dezembro. Impacto de R$ 1.2M no mês, tendência de estabilização em março.",
+      type: "recurring",
+      mes_ref: "2024-12",
+    },
+    "Serviços de Terceiros": {
+      conta_pl: "Serviços de Terceiros",
+      explanation: "Projeto de migração cloud com Accenture — fase 2 iniciada em novembro. Previsto encerramento em fevereiro.",
+      type: "one-off",
+      mes_ref: "2024-12",
+    },
   };
 }
 

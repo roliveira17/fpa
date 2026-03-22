@@ -11,9 +11,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useKnowledgeStore } from "@/lib/store";
-import { getMockDiagnosticData } from "@/lib/mock/financial-data";
+import { getMockDiagnosticData, getMockPreviousMonthKnowledge } from "@/lib/mock/financial-data";
 import { formatBrl, formatBrlCompact, formatPct, trendArrow, budgetStatus } from "@/lib/formatters";
-import { DiagnosticData, KnowledgeExplanation } from "@/lib/types";
+import { DiagnosticData, KnowledgeExplanation, PreviousMonthKnowledge } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
 
 interface StepDiagnosticProps {
   on_next: () => void;
@@ -23,6 +24,7 @@ interface StepDiagnosticProps {
 export function StepDiagnostic({ on_next, on_back }: StepDiagnosticProps) {
   const { diretoria, mes_ref, show_all, explanations, bp_notes, setExplanation, setBpNotes } = useKnowledgeStore();
   const data = getMockDiagnosticData(diretoria);
+  const prev_knowledge = getMockPreviousMonthKnowledge(diretoria);
 
   const filtered = show_all
     ? data.variances
@@ -130,6 +132,7 @@ export function StepDiagnostic({ on_next, on_back }: StepDiagnosticProps) {
             variance={v}
             diagnostic={data}
             explanation={explanations[v.conta_pl]}
+            previous={prev_knowledge[v.conta_pl]}
             on_explain={(exp) => setExplanation(v.conta_pl, exp)}
           />
         ))}
@@ -165,11 +168,12 @@ function MetricCard({
 }
 
 function VarianceExpander({
-  variance, diagnostic, explanation, on_explain,
+  variance, diagnostic, explanation, previous, on_explain,
 }: {
   variance: { conta_pl: string; trend: number[] };
   diagnostic: DiagnosticData;
   explanation?: KnowledgeExplanation;
+  previous?: PreviousMonthKnowledge;
   on_explain: (exp: KnowledgeExplanation) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -236,6 +240,28 @@ function VarianceExpander({
             {variance.trend.map(formatBrlCompact).join(" → ")}
           </p>
         </div>
+
+        {previous && (
+          <div className="rounded-md bg-primary/5 border border-primary/10 p-2.5">
+            <p className="text-[10px] font-medium text-primary mb-1">
+              Explicação mês anterior ({previous.mes_ref})
+            </p>
+            <p className="text-xs text-foreground/80">{previous.explanation}</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge variant="outline" className="text-[9px] px-1">
+                {previous.type}
+              </Badge>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-5 text-[10px] text-muted-foreground"
+                onClick={() => setText(previous.explanation)}
+              >
+                Reusar explicação
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Explanation textarea */}
         <div className="space-y-1">
