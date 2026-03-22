@@ -1,0 +1,123 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useKnowledgeStore } from "@/lib/store";
+import { BP_MAPPING } from "@/lib/constants";
+
+interface StepPreviewProps {
+  on_next: () => void;
+  on_back: () => void;
+}
+
+function generateYaml(store: {
+  diretoria: string;
+  mes_ref: string;
+  analyst_name: string;
+  explanations: Record<string, { conta_pl: string; explanation: string; type: string; expect_next_month: boolean }>;
+  bp_notes: string;
+}): string {
+  const bp = BP_MAPPING[store.diretoria] ?? "N/A";
+  const variances = Object.values(store.explanations);
+
+  let yaml = `diretoria: "${store.diretoria}"\n`;
+  yaml += `bp: "${bp}"\n`;
+  yaml += `mes_ref: "${store.mes_ref}"\n`;
+  yaml += `source: "streamlit"\n`;
+  yaml += `approved_at: "${new Date().toISOString()}"\n`;
+  yaml += `analyst: "${store.analyst_name}"\n`;
+
+  if (variances.length > 0) {
+    yaml += `variances:\n`;
+    for (const v of variances) {
+      yaml += `  - conta_pl: "${v.conta_pl}"\n`;
+      yaml += `    explanation: "${v.explanation}"\n`;
+      yaml += `    type: "${v.type}"\n`;
+      yaml += `    expect_next_month: ${v.expect_next_month}\n`;
+    }
+  }
+
+  if (store.bp_notes) {
+    yaml += `notes: "${store.bp_notes}"\n`;
+  }
+
+  return yaml;
+}
+
+function validateYaml(text: string): string[] {
+  const errors: string[] = [];
+  if (!text.includes("diretoria:")) errors.push("Campo 'diretoria' obrigatório");
+  if (!text.includes("mes_ref:")) errors.push("Campo 'mes_ref' obrigatório");
+  if (!text.includes("variances:") && !text.includes("notes:")) {
+    errors.push("Pelo menos 'variances' ou 'notes' é obrigatório");
+  }
+  return errors;
+}
+
+export function StepPreview({ on_next, on_back }: StepPreviewProps) {
+  const store = useKnowledgeStore();
+  const [yaml_text, setYamlText] = useState("");
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const generated = generateYaml(store);
+    setYamlText(generated);
+    store.setYamlText(generated);
+    setErrors(validateYaml(generated));
+  // Only run on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleChange(text: string) {
+    setYamlText(text);
+    store.setYamlText(text);
+    setErrors(validateYaml(text));
+  }
+
+  function handleSave() {
+    store.setSavedPath(`knowledge/variances/${store.diretoria.toLowerCase()}/${store.mes_ref}.yaml`);
+    on_next();
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-4 p-6">
+      <div>
+        <p className="text-sm font-medium mb-2">Preview do YAML</p>
+        <textarea
+          value={yaml_text}
+          onChange={(e) => handleChange(e.target.value)}
+          className="w-full h-[400px] rounded-md bg-[#0D0D18] border border-border p-4 font-mono text-xs text-green-400/80 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+          spellCheck={false}
+        />
+      </div>
+
+      {errors.length > 0 && (
+        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+          <p className="text-xs font-medium text-destructive mb-1">
+            Erros de validação:
+          </p>
+          <ul className="space-y-0.5">
+            {errors.map((err, i) => (
+              <li key={i} className="text-xs text-destructive/80">
+                • {err}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={on_back}>
+          Voltar
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={errors.length > 0}
+          className="bg-primary hover:bg-primary/90"
+        >
+          Salvar
+        </Button>
+      </div>
+    </div>
+  );
+}

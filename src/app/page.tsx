@@ -1,65 +1,89 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Header } from "@/components/layout/header";
+import { SidebarLeft } from "@/components/layout/sidebar-left";
+import { SidebarRight } from "@/components/layout/sidebar-right";
+import { ChatView } from "@/components/chat/chat-view";
+import { KnowledgeView } from "@/components/knowledge/knowledge-view";
+import { ContextView } from "@/components/context/context-view";
+import { useAppStore, useChatStore } from "@/lib/store";
+import { getMockChatResponse } from "@/lib/mock/financial-data";
+import { ChatMessage } from "@/lib/types";
+
+const REPORT_PROMPTS: Record<string, string> = {
+  fechamento_mensal: "Como foi o P&L do último mês fechado?",
+  centro_custo: "Analise os centros de custo do mês atual",
+  dre_anual: "Monte a DRE anual consolidada",
+  desvios_mensais: "Quais contas tiveram maior desvio vs orçado?",
+  deep_dive: "Explica G&A — drill-down passo a passo",
+  earnings_release: "Compile o earnings release do trimestre",
+};
 
 export default function Home() {
+  const { active_tab, setActiveTab } = useAppStore();
+  const { addMessage, setLoading } = useChatStore();
+
+  const handleReportClick = useCallback((report_id: string) => {
+    const prompt = REPORT_PROMPTS[report_id] ?? `Gere o relatório ${report_id}`;
+
+    const user_msg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: prompt,
+      timestamp: new Date(),
+    };
+    addMessage(user_msg);
+    setLoading(true);
+
+    setTimeout(() => {
+      const response = getMockChatResponse(prompt);
+      const assistant_msg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: response.text,
+        response,
+        timestamp: new Date(),
+      };
+      addMessage(assistant_msg);
+      setLoading(false);
+    }, 1500);
+  }, [addMessage, setLoading]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex h-full flex-col">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <SidebarLeft onReportClick={handleReportClick} />
+        <main className="flex flex-1 flex-col overflow-hidden">
+          {/* Tabs */}
+          <div className="border-b border-border bg-card px-4 py-1.5">
+            <Tabs
+              value={active_tab}
+              onValueChange={(v) => setActiveTab(v as "chat" | "knowledge" | "context")}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <TabsList className="h-8 bg-secondary/30">
+                <TabsTrigger value="chat" className="text-xs h-6 px-3">
+                  Chat
+                </TabsTrigger>
+                <TabsTrigger value="knowledge" className="text-xs h-6 px-3">
+                  Knowledge Input
+                </TabsTrigger>
+                <TabsTrigger value="context" className="text-xs h-6 px-3">
+                  Contexto Gerencial
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Tab content */}
+          {active_tab === "chat" && <ChatView />}
+          {active_tab === "knowledge" && <KnowledgeView />}
+          {active_tab === "context" && <ContextView />}
+        </main>
+        <SidebarRight />
+      </div>
     </div>
   );
 }
