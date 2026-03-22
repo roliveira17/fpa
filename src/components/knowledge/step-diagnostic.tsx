@@ -159,7 +159,7 @@ export function StepDiagnostic({ on_next, on_back }: StepDiagnosticProps) {
           Voltar
         </Button>
         <Button onClick={on_next} className="bg-primary hover:bg-primary/90">
-          Gerar Preview YAML
+          Gerar Preview
         </Button>
       </div>
     </div>

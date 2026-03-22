@@ -1,94 +1,124 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useKnowledgeStore } from "@/lib/store";
-import { BP_MAPPING } from "@/lib/constants";
-import { YamlEditor } from "./yaml-editor";
+import { saveKnowledge } from "@/lib/api";
+import { KnowledgePreviewCard } from "./knowledge-preview-card";
+import { ConflictResolutionModal } from "./conflict-resolution-modal";
+import type { ConflictInfo } from "@/lib/types";
 
 interface StepPreviewProps {
   on_next: () => void;
   on_back: () => void;
 }
 
-function generateYaml(store: {
-  diretoria: string;
-  mes_ref: string;
-  analyst_name: string;
-  explanations: Record<string, { conta_pl: string; explanation: string; type: string; expect_next_month: boolean }>;
-  bp_notes: string;
-}): string {
-  const bp = BP_MAPPING[store.diretoria] ?? "N/A";
-  const variances = Object.values(store.explanations);
+export function StepPreview({ on_next, on_back }: StepPreviewProps) {
+  const store = useKnowledgeStore();
+  const { group_squads, diretoria, mes_ref, analyst_name, explanations, bp_notes } = store;
+  const is_group = group_squads.length > 0;
+  const [is_saving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [active_conflict, setActiveConflict] = useState<ConflictInfo | null>(null);
 
-  let yaml = `diretoria: "${store.diretoria}"\n`;
-  yaml += `bp: "${bp}"\n`;
-  yaml += `mes_ref: "${store.mes_ref}"\n`;
-  yaml += `source: "streamlit"\n`;
-  yaml += `approved_at: "${new Date().toISOString()}"\n`;
-  yaml += `analyst: "${store.analyst_name}"\n`;
+  const has_content = Object.keys(explanations).length > 0 || bp_notes.trim().length > 0;
 
-  if (variances.length > 0) {
-    yaml += `variances:\n`;
-    for (const v of variances) {
-      yaml += `  - conta_pl: "${v.conta_pl}"\n`;
-      yaml += `    explanation: "${v.explanation}"\n`;
-      yaml += `    type: "${v.type}"\n`;
-      yaml += `    expect_next_month: ${v.expect_next_month}\n`;
+  function buildEntries() {
+    const entries = Object.values(explanations).map((exp) => ({
+      conta_pl: exp.conta_pl as string | null,
+      explanation: exp.explanation,
+      variance_type: exp.type as 'one-off' | 'recurring' | 'seasonal' | 'reclassification',
+      expect_next: exp.expect_next_month,
+    }));
+    if (bp_notes.trim()) {
+      entries.push({
+        conta_pl: null,
+        explanation: bp_notes,
+        variance_type: "one-off" as const,
+        expect_next: false,
+      });
+    }
+    return entries;
+  }
+
+  async function handleSave(target_diretoria: string) {
+    setIsSaving(true);
+    setError(null);
+    try {
+      const result = await saveKnowledge({
+        diretoria: target_diretoria,
+        mes_ref,
+        analyst: analyst_name,
+        entry_type: "variance_explanation",
+        entries: buildEntries(),
+      });
+      store.setSaveResult(result);
+      if (result.conflicts.length > 0) {
+        store.setConflicts(result.conflicts);
+        setActiveConflict(result.conflicts[0]);
+      } else {
+        on_next();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar conhecimento.");
+    } finally {
+      setIsSaving(false);
     }
   }
 
-  if (store.bp_notes) {
-    yaml += `notes: "${store.bp_notes}"\n`;
+  async function handleSaveAll() {
+    setIsSaving(true);
+    setError(null);
+    try {
+      let total_created = 0;
+      let total_merged = 0;
+      let total_skipped = 0;
+      const all_conflicts: ConflictInfo[] = [];
+
+      for (const squad of group_squads) {
+        const result = await saveKnowledge({
+          diretoria: squad,
+          mes_ref,
+          analyst: analyst_name,
+          entry_type: "variance_explanation",
+          entries: buildEntries(),
+        });
+        total_created += result.created;
+        total_merged += result.merged;
+        total_skipped += result.skipped;
+        all_conflicts.push(...result.conflicts);
+      }
+
+      store.setSaveResult({
+        created: total_created,
+        merged: total_merged,
+        skipped: total_skipped,
+        conflicts: all_conflicts,
+      });
+
+      if (all_conflicts.length > 0) {
+        store.setConflicts(all_conflicts);
+        setActiveConflict(all_conflicts[0]);
+      } else {
+        on_next();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar conhecimento.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  return yaml;
-}
-
-function validateYaml(text: string): string[] {
-  const errors: string[] = [];
-  if (!text.includes("diretoria:")) errors.push("Campo 'diretoria' obrigatório");
-  if (!text.includes("mes_ref:")) errors.push("Campo 'mes_ref' obrigatório");
-  if (!text.includes("variances:") && !text.includes("notes:")) {
-    errors.push("Pelo menos 'variances' ou 'notes' é obrigatório");
-  }
-  return errors;
-}
-
-export function StepPreview({ on_next, on_back }: StepPreviewProps) {
-  const store = useKnowledgeStore();
-  const { group_squads } = store;
-  const is_group = group_squads.length > 0;
-  const [yaml_text, setYamlText] = useState("");
-  const [errors, setErrors] = useState<string[]>([]);
-
-  useEffect(() => {
-    const generated = generateYaml(store);
-    setYamlText(generated);
-    store.setYamlText(generated);
-    setErrors(validateYaml(generated));
-  // Only run on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function handleChange(text: string) {
-    setYamlText(text);
-    store.setYamlText(text);
-    setErrors(validateYaml(text));
-  }
-
-  function handleSave() {
-    store.setSavedPath(`knowledge/variances/${store.diretoria.toLowerCase()}/${store.mes_ref}.yaml`);
-    on_next();
-  }
-
-  function handleSaveAll() {
-    const paths = group_squads.map(
-      (squad) => `knowledge/variances/${squad.toLowerCase()}/${store.mes_ref}.yaml`
-    );
-    store.setSavedPath(paths);
-    on_next();
+  function handleConflictResolved(entry_id: string) {
+    store.resolveConflict(entry_id);
+    const remaining = useKnowledgeStore.getState().conflicts;
+    if (remaining.length > 0) {
+      setActiveConflict(remaining[0]);
+    } else {
+      setActiveConflict(null);
+      on_next();
+    }
   }
 
   return (
@@ -101,53 +131,64 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
                 {squad}
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-1">
-                <YamlEditor value={yaml_text} on_change={handleChange} height="200px" />
+                <KnowledgePreviewCard
+                  diretoria={squad}
+                  mes_ref={mes_ref}
+                  analyst={analyst_name}
+                  explanations={explanations}
+                  bp_notes={bp_notes}
+                />
               </CollapsibleContent>
             </Collapsible>
           ))}
           <div className="flex justify-between">
             <Button variant="outline" onClick={on_back}>Voltar</Button>
-            <Button onClick={handleSaveAll} disabled={errors.length > 0} className="bg-primary hover:bg-primary/90">
-              Salvar Todos
+            <Button
+              onClick={handleSaveAll}
+              disabled={!has_content || is_saving}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {is_saving ? "Salvando..." : "Salvar Todos"}
             </Button>
           </div>
         </div>
       ) : (
         <>
           <div>
-            <p className="text-sm font-medium mb-2">Preview do YAML</p>
-            <YamlEditor value={yaml_text} on_change={handleChange} height="400px" />
+            <p className="text-sm font-medium mb-2">Preview do Conhecimento</p>
+            <KnowledgePreviewCard
+              diretoria={diretoria}
+              mes_ref={mes_ref}
+              analyst={analyst_name}
+              explanations={explanations}
+              bp_notes={bp_notes}
+            />
           </div>
-
-          {errors.length > 0 && (
-            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
-              <p className="text-xs font-medium text-destructive mb-1">
-                Erros de validação:
-              </p>
-              <ul className="space-y-0.5">
-                {errors.map((err, i) => (
-                  <li key={i} className="text-xs text-destructive/80">
-                    • {err}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           <div className="flex justify-between">
-            <Button variant="outline" onClick={on_back}>
-              Voltar
-            </Button>
+            <Button variant="outline" onClick={on_back}>Voltar</Button>
             <Button
-              onClick={handleSave}
-              disabled={errors.length > 0}
+              onClick={() => handleSave(diretoria)}
+              disabled={!has_content || is_saving}
               className="bg-primary hover:bg-primary/90"
             >
-              Salvar
+              {is_saving ? "Salvando..." : "Salvar"}
             </Button>
           </div>
         </>
       )}
+
+      {error && (
+        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+          <p className="text-xs text-destructive">{error}</p>
+        </div>
+      )}
+
+      <ConflictResolutionModal
+        conflict={active_conflict}
+        open={active_conflict !== null}
+        on_resolved={handleConflictResolved}
+        on_close={() => setActiveConflict(null)}
+      />
     </div>
   );
 }

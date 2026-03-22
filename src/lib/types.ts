@@ -77,14 +77,53 @@ export interface KnowledgeExplanation {
   expect_next_month: boolean;
 }
 
-export interface KnowledgeYaml {
+
+export interface KnowledgeEntry {
+  id: string;
   diretoria: string;
-  bp: string;
   mes_ref: string;
-  source: string;
-  approved_at: string;
-  variances: KnowledgeExplanation[];
-  notes: string;
+  conta_pl: string | null;
+  entry_type: 'variance_explanation' | 'context_gerencial' | 'bp_note';
+  explanation: string;
+  variance_type: 'one-off' | 'recurring' | 'seasonal' | 'reclassification' | null;
+  expect_next: boolean;
+  analyst: string;
+  sources: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IngestionResult {
+  created: number;
+  merged: number;
+  skipped: number;
+  conflicts: ConflictInfo[];
+}
+
+export interface ConflictInfo {
+  entry_id: string;
+  existing_text: string;
+  new_text: string;
+  reason: string;
+}
+
+export interface ContextProcessResult {
+  fragments_total: number;
+  created: number;
+  merged: number;
+  skipped: number;
+  conflicts: ConflictInfo[];
+}
+
+export interface CatalogEntry {
+  id: string;
+  table_name: string;
+  description: string;
+  granularity: string;
+  columns: { name: string; type: string; description: string }[];
+  use_cases: string[];
+  sample_queries: { description: string; sql: string }[];
+  is_active: boolean;
 }
 
 export interface DreRow {

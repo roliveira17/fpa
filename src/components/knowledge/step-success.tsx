@@ -3,23 +3,22 @@
 import { Button } from "@/components/ui/button";
 import { useKnowledgeStore, useChatStore, useAppStore } from "@/lib/store";
 import { getMockChatResponse } from "@/lib/mock/financial-data";
+import { IngestionSummary } from "./ingestion-summary";
 
 export function StepSuccess() {
-  const { diretoria, mes_ref, saved_path, reset, group_squads } = useKnowledgeStore();
+  const { diretoria, mes_ref, save_result, reset, group_squads } = useKnowledgeStore();
   const is_group = group_squads.length > 0;
   const { addMessage, setLoading } = useChatStore();
   const { setActiveTab } = useAppStore();
 
   function handleFollowUp(query: string) {
     setActiveTab("chat");
-
     addMessage({
       id: crypto.randomUUID(),
       role: "user",
       content: query,
       timestamp: new Date(),
     });
-
     setLoading(true);
     setTimeout(() => {
       const response = getMockChatResponse(query);
@@ -44,16 +43,7 @@ export function StepSuccess() {
         </p>
       </div>
 
-      {saved_path && (
-        <div className="rounded-md bg-secondary/30 p-3">
-          <p className="text-[11px] text-muted-foreground">
-            {Array.isArray(saved_path) ? "Arquivos salvos em:" : "Arquivo salvo em:"}
-          </p>
-          {(Array.isArray(saved_path) ? saved_path : [saved_path]).map((p) => (
-            <p key={p} className="font-mono text-xs text-foreground mt-0.5">{p}</p>
-          ))}
-        </div>
-      )}
+      {save_result && <IngestionSummary result={save_result} />}
 
       {is_group ? (
         <div className="space-y-2">
@@ -86,11 +76,7 @@ export function StepSuccess() {
         </div>
       )}
 
-      <Button
-        onClick={reset}
-        variant="outline"
-        className="mt-4"
-      >
+      <Button onClick={reset} variant="outline" className="mt-4">
         Iniciar novo registro
       </Button>
     </div>
