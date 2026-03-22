@@ -38,6 +38,21 @@
 - [ ] Relatório de Folha de Pagamento — headcount, custo médio, turnover
 - [ ] Forecast Rolling — projeções de cenários (base, otimista, pessimista)
 
+### Knowledge Repository para o Agente (prioridade alta)
+Definir as melhores práticas e arquitetura do repositório de conhecimento que o agente usa para responder perguntas. O objetivo é que o agente consiga buscar informações relevantes de múltiplas fontes para fundamentar suas respostas.
+
+- [ ] Pesquisar padrões de knowledge base para agents (RAG, vector stores, hybrid search)
+- [ ] Definir estrutura de armazenamento: YAML knowledge files vs vector DB vs ambos
+- [ ] Indexação de explicações de variações dos BPs (output do Knowledge Input wizard)
+- [ ] Indexação de contexto gerencial (transcrições, PDFs processados)
+- [ ] Indexação de relatórios anteriores (fechamentos mensais, earnings releases)
+- [ ] Estratégia de chunking e embedding para documentos financeiros
+- [ ] Retrieval strategy: como o agente decide o que buscar (keyword, semantic, hybrid)
+- [ ] Freshness policy: priorizar conhecimento recente vs histórico
+- [ ] Metadata enrichment: mes_ref, diretoria, conta_pl, tipo de documento como filtros
+- [ ] Avaliação de qualidade: como medir se o agente está trazendo contexto relevante
+- [ ] Benchmark: comparar respostas com e sem knowledge retrieval
+
 ### Integração Backend (futuro)
 - [ ] Conectar ao backend Python existente via API REST
 - [ ] Substituir mocks por dados reais (Athena/Coralake)
