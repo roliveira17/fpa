@@ -65,6 +65,39 @@ describe("KnowledgeStore", () => {
     expect(useKnowledgeStore.getState().step).toBe(1);
     expect(useKnowledgeStore.getState().diretoria).toBe("");
   });
+
+  it("sets save result", () => {
+    const result = { created: 2, merged: 1, skipped: 0, conflicts: [] };
+    useKnowledgeStore.getState().setSaveResult(result);
+    expect(useKnowledgeStore.getState().save_result).toEqual(result);
+  });
+
+  it("sets conflicts", () => {
+    const conflicts = [
+      { entry_id: "abc", existing_text: "old", new_text: "new", reason: "contradiction" },
+    ];
+    useKnowledgeStore.getState().setConflicts(conflicts);
+    expect(useKnowledgeStore.getState().conflicts).toHaveLength(1);
+  });
+
+  it("resolves a conflict by removing it from the list", () => {
+    const conflicts = [
+      { entry_id: "abc", existing_text: "old", new_text: "new", reason: "contradiction" },
+      { entry_id: "def", existing_text: "old2", new_text: "new2", reason: "duplicate" },
+    ];
+    useKnowledgeStore.getState().setConflicts(conflicts);
+    useKnowledgeStore.getState().resolveConflict("abc");
+    expect(useKnowledgeStore.getState().conflicts).toHaveLength(1);
+    expect(useKnowledgeStore.getState().conflicts[0].entry_id).toBe("def");
+  });
+
+  it("reset clears save_result and conflicts", () => {
+    useKnowledgeStore.getState().setSaveResult({ created: 1, merged: 0, skipped: 0, conflicts: [] });
+    useKnowledgeStore.getState().setConflicts([{ entry_id: "x", existing_text: "", new_text: "", reason: "" }]);
+    useKnowledgeStore.getState().reset();
+    expect(useKnowledgeStore.getState().save_result).toBeNull();
+    expect(useKnowledgeStore.getState().conflicts).toEqual([]);
+  });
 });
 
 describe("AppStore", () => {

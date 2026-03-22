@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ChatMessage, KnowledgeExplanation, LoadingStep, SettingsState } from "./types";
+import { ChatMessage, ConflictInfo, IngestionResult, KnowledgeExplanation, LoadingStep, SettingsState } from "./types";
 
 interface ChatStore {
   messages: ChatMessage[];
@@ -29,8 +29,8 @@ interface KnowledgeStore {
   show_all: boolean;
   explanations: Record<string, KnowledgeExplanation>;
   bp_notes: string;
-  yaml_text: string;
-  saved_path: string | string[] | null;
+  save_result: IngestionResult | null;
+  conflicts: ConflictInfo[];
   group_squads: string[];
   active_squad: string;
   setStep: (n: number) => void;
@@ -40,8 +40,9 @@ interface KnowledgeStore {
   setShowAll: (v: boolean) => void;
   setExplanation: (conta: string, exp: KnowledgeExplanation) => void;
   setBpNotes: (v: string) => void;
-  setYamlText: (v: string) => void;
-  setSavedPath: (v: string | string[] | null) => void;
+  setSaveResult: (r: IngestionResult | null) => void;
+  setConflicts: (c: ConflictInfo[]) => void;
+  resolveConflict: (entry_id: string) => void;
   setGroupSquads: (squads: string[]) => void;
   setActiveSquad: (squad: string) => void;
   reset: () => void;
@@ -55,8 +56,8 @@ const KNOWLEDGE_INITIAL = {
   show_all: false,
   explanations: {},
   bp_notes: "",
-  yaml_text: "",
-  saved_path: null,
+  save_result: null,
+  conflicts: [],
   group_squads: [],
   active_squad: "",
 };
@@ -71,8 +72,9 @@ export const useKnowledgeStore = create<KnowledgeStore>((set) => ({
   setExplanation: (conta, exp) =>
     set((s) => ({ explanations: { ...s.explanations, [conta]: exp } })),
   setBpNotes: (v) => set({ bp_notes: v }),
-  setYamlText: (v) => set({ yaml_text: v }),
-  setSavedPath: (v) => set({ saved_path: v }),
+  setSaveResult: (r) => set({ save_result: r }),
+  setConflicts: (c) => set({ conflicts: c }),
+  resolveConflict: (entry_id) => set((s) => ({ conflicts: s.conflicts.filter((c) => c.entry_id !== entry_id) })),
   setGroupSquads: (squads) => set({ group_squads: squads, active_squad: squads[0] ?? "" }),
   setActiveSquad: (squad) => set({ active_squad: squad }),
   reset: () => set(KNOWLEDGE_INITIAL),
