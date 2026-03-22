@@ -14,6 +14,7 @@
 - [x] Layout responsivo tablet (sidebars colapsáveis)
 - [x] Design system Cora alinhado com spec (tokens, cores, tipografia)
 - [x] 47 testes (37 unit + 10 E2E)
+- [x] Design spec do Knowledge Repository (Postgres + SQL retrieval + dedup/merge)
 
 ## Próximos Passos
 
@@ -39,19 +40,30 @@
 - [ ] Forecast Rolling — projeções de cenários (base, otimista, pessimista)
 
 ### Knowledge Repository para o Agente (prioridade alta)
-Definir as melhores práticas e arquitetura do repositório de conhecimento que o agente usa para responder perguntas. O objetivo é que o agente consiga buscar informações relevantes de múltiplas fontes para fundamentar suas respostas.
+Arquitetura definida — spec em `docs/superpowers/specs/2026-03-22-knowledge-repository-design.md`.
+Decisão: Postgres (RDS) com tabelas estruturadas, retrieval via SQL + full-text search, dedup com merge na ingestão.
 
-- [ ] Pesquisar padrões de knowledge base para agents (RAG, vector stores, hybrid search)
-- [ ] Definir estrutura de armazenamento: YAML knowledge files vs vector DB vs ambos
-- [ ] Indexação de explicações de variações dos BPs (output do Knowledge Input wizard)
-- [ ] Indexação de contexto gerencial (transcrições, PDFs processados)
-- [ ] Indexação de relatórios anteriores (fechamentos mensais, earnings releases)
-- [ ] Estratégia de chunking e embedding para documentos financeiros
-- [ ] Retrieval strategy: como o agente decide o que buscar (keyword, semantic, hybrid)
-- [ ] Freshness policy: priorizar conhecimento recente vs histórico
-- [ ] Metadata enrichment: mes_ref, diretoria, conta_pl, tipo de documento como filtros
-- [ ] Avaliação de qualidade: como medir se o agente está trazendo contexto relevante
-- [ ] Benchmark: comparar respostas com e sem knowledge retrieval
+**Frontend (este repo):**
+- [ ] Substituir YamlEditor por KnowledgePreviewCard (card resumo formatado)
+- [ ] Refatorar StepPreview para POST API em vez de gerar YAML
+- [ ] Refatorar StepSuccess para mostrar contadores (criados/merged/skipped)
+- [ ] Criar ConflictResolutionModal para contradições na ingestão
+- [ ] Refatorar ContextView para mostrar resumo de fragmentação
+- [ ] Criar API client layer (src/lib/api.ts) com funções typed
+- [ ] Atualizar types (KnowledgeEntry, IngestionResult, ConflictInfo, CatalogEntry)
+- [ ] Atualizar KnowledgeStore (remover yaml_text/saved_path, adicionar save_result/conflicts)
+- [ ] Atualizar mock layer para simular novos endpoints
+- [ ] Remover YamlEditor e código YAML associado
+
+**Backend (repo separado — spec fornecido para outra equipe/LLM):**
+- [ ] Criar tabelas no RDS: knowledge_entries, data_catalog, ingestion_log
+- [ ] Implementar endpoints: /api/knowledge/save, /search, /resolve-conflict
+- [ ] Implementar /api/context/process com fragmentação LLM + dedup
+- [ ] Implementar /api/catalog/list, /search, /register
+- [ ] Seed do data_catalog com tabelas conhecidas (fpa_combined, margem de contribuição)
+- [ ] Migrar KnowledgeManager de file-based para DB-based
+- [ ] Migrar fpa_analyst.py de file-loading para tool-calling (search_knowledge, query_data_catalog)
+- [ ] Setup S3 bucket para backup de transcrições/PDFs raw
 
 ### Integração Backend (futuro)
 - [ ] Conectar ao backend Python existente via API REST
