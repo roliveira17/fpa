@@ -66,7 +66,6 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
   useEffect(() => {
     const generated = generateYaml(store);
     setYamlText(generated);
-    store.setYamlText(generated);
     setErrors(validateYaml(generated));
   // Only run on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,20 +73,14 @@ export function StepPreview({ on_next, on_back }: StepPreviewProps) {
 
   function handleChange(text: string) {
     setYamlText(text);
-    store.setYamlText(text);
     setErrors(validateYaml(text));
   }
 
   function handleSave() {
-    store.setSavedPath(`knowledge/variances/${store.diretoria.toLowerCase()}/${store.mes_ref}.yaml`);
     on_next();
   }
 
   function handleSaveAll() {
-    const paths = group_squads.map(
-      (squad) => `knowledge/variances/${squad.toLowerCase()}/${store.mes_ref}.yaml`
-    );
-    store.setSavedPath(paths);
     on_next();
   }
 

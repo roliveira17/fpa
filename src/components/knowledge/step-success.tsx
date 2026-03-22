@@ -5,7 +5,7 @@ import { useKnowledgeStore, useChatStore, useAppStore } from "@/lib/store";
 import { getMockChatResponse } from "@/lib/mock/financial-data";
 
 export function StepSuccess() {
-  const { diretoria, mes_ref, saved_path, reset, group_squads } = useKnowledgeStore();
+  const { diretoria, mes_ref, reset, group_squads } = useKnowledgeStore();
   const is_group = group_squads.length > 0;
   const { addMessage, setLoading } = useChatStore();
   const { setActiveTab } = useAppStore();
@@ -43,17 +43,6 @@ export function StepSuccess() {
           As explicações foram registradas com sucesso.
         </p>
       </div>
-
-      {saved_path && (
-        <div className="rounded-md bg-secondary/30 p-3">
-          <p className="text-[11px] text-muted-foreground">
-            {Array.isArray(saved_path) ? "Arquivos salvos em:" : "Arquivo salvo em:"}
-          </p>
-          {(Array.isArray(saved_path) ? saved_path : [saved_path]).map((p) => (
-            <p key={p} className="font-mono text-xs text-foreground mt-0.5">{p}</p>
-          ))}
-        </div>
-      )}
 
       {is_group ? (
         <div className="space-y-2">
